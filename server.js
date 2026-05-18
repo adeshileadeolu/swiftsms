@@ -14,7 +14,10 @@ const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 
-// ── CORS — accepts your Netlify URL + localhost for dev ──────────────────────
+// ── TRUST RAILWAY'S PROXY — must be first, fixes rate-limit + CORS ───────────
+app.set('trust proxy', 1);
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
 const rawOrigin = process.env.FRONTEND_URL || '';
 const allowedOrigins = [
   ...rawOrigin.split(',').map(o => o.trim().replace(/\/$/, '')),
@@ -47,8 +50,21 @@ app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
 app.use(express.json());
 
 // ── Rate limiters ─────────────────────────────────────────────────────────────
-app.use(rateLimit({ windowMs: 15*60*1000, max: 100, message: { error: 'Too many requests.' } }));
-const authLimiter = rateLimit({ windowMs: 15*60*1000, max: 10, message: { error: 'Too many auth attempts.' } });
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down.' },
+}));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many auth attempts. Try again in 15 minutes.' },
+});
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',    authLimiter, authRoutes);
@@ -64,7 +80,10 @@ app.get('/health', (req, res) => res.json({
 }));
 
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
-app.use((err, req, res, next) => { res.status(500).json({ error: 'Internal server error' }); });
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGODB_URI)
@@ -73,4 +92,7 @@ mongoose.connect(process.env.MONGODB_URI)
     const PORT = process.env.PORT || 4000;
     app.listen(PORT, () => console.log(`✓ SwiftSMS backend running on port ${PORT}`));
   })
-  .catch(err => { console.error('✗ MongoDB connection failed:', err.message); process.exit(1); });
+  .catch(err => {
+    console.error('✗ MongoDB connection failed:', err.message);
+    process.exit(1);
+  });
