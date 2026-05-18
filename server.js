@@ -14,34 +14,19 @@ const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 
-// ── TRUST RAILWAY'S PROXY — must be first, fixes rate-limit + CORS ───────────
+// ── Trust Railway/cloud proxy — MUST be first line ───────────────────────────
 app.set('trust proxy', 1);
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-const rawOrigin = process.env.FRONTEND_URL || '';
-const allowedOrigins = [
-  ...rawOrigin.split(',').map(o => o.trim().replace(/\/$/, '')),
-  'http://localhost:3000',
-  'http://localhost:5500',
-  'http://127.0.0.1:5500',
-];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    const clean = origin.replace(/\/$/, '');
-    if (allowedOrigins.includes(clean)) return callback(null, true);
-    console.warn(`CORS blocked: ${origin}`);
-    callback(new Error(`CORS: origin ${origin} not allowed`));
-  },
-  credentials: true,
+// ── CORS — wide open for now, locks down after confirmed working ──────────────
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-};
+}));
+app.options('*', cors());
 
-app.use(helmet());
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// ── Helmet — relax for debugging ─────────────────────────────────────────────
+app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // ── Raw body for BTCPay webhook ───────────────────────────────────────────────
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
@@ -52,18 +37,18 @@ app.use(express.json());
 // ── Rate limiters ─────────────────────────────────────────────────────────────
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests. Please slow down.' },
+  message: { error: 'Too many requests.' },
 }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many auth attempts. Try again in 15 minutes.' },
+  message: { error: 'Too many auth attempts.' },
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -73,16 +58,30 @@ app.use('/api/wallet',  walletRoutes);
 app.use('/api/clients', clientRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({
-  status: 'ok',
-  time: new Date().toISOString(),
-  db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-}));
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    time: new Date().toISOString(),
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    frontend_url: process.env.FRONTEND_URL || 'not set',
+    node_env: process.env.NODE_ENV || 'not set',
+  });
+});
+
+// ── Debug route — shows what origin Railway sees ──────────────────────────────
+app.get('/debug', (req, res) => {
+  res.json({
+    origin:  req.headers.origin || 'no origin header',
+    host:    req.headers.host,
+    ip:      req.ip,
+    forward: req.headers['x-forwarded-for'] || 'none',
+  });
+});
 
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
