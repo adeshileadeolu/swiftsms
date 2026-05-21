@@ -14,35 +14,118 @@ const makeCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 // ── POST /api/auth/signup — Step 1: register + send verification code ─────────
 router.post('/signup', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, company, country, agreedToTos } = req.body;
-    if (!firstName || !lastName || !email || !password || !country) return res.status(400).json({ error: 'All fields are required' });
-    if (!agreedToTos) return res.status(400).json({ error: 'You must agree to the Terms of Service' });
-    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      company,
+      country,
+      agreedToTos
+    } = req.body;
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing && existing.isEmailVerified) return res.status(409).json({ error: 'An account with this email already exists' });
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const code   = makeCode();
-    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    if (existing && !existing.isEmailVerified) {
-      // Resend code to unverified account
-      existing.emailVerifyCode   = code;
-      existing.emailVerifyExpiry = expiry;
-      existing.firstName = firstName;
-      existing.lastName  = lastName;
-      await existing.save();
-      await sendVerificationEmail(email, firstName, code);
-      return res.json({ message: 'Verification code sent', email, step: 'verify' });
+    if (!firstName || !lastName || !normalizedEmail || !password || !country) {
+      return res.status(400).json({
+        error: 'All fields are required'
+      });
     }
 
-    const user = new User({ firstName, lastName, email, password, company, country, agreedToTos, tosAgreedAt: new Date(), emailVerifyCode: code, emailVerifyExpiry: expiry });
+    if (!agreedToTos) {
+      return res.status(400).json({
+        error: 'You must agree to the Terms of Service'
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        error: 'Password must be at least 8 characters'
+      });
+    }
+
+    const existing = await User.findOne({
+      email: normalizedEmail
+    });
+
+    if (existing && existing.isEmailVerified) {
+      return res.status(409).json({
+        error: 'An account with this email already exists'
+      });
+    }
+
+    const code = makeCode();
+
+    const expiry = new Date(Date.now() + 15 * 60 * 1000);
+
+    if (existing && !existing.isEmailVerified) {
+
+      existing.firstName = firstName;
+      existing.lastName = lastName;
+      existing.password = password;
+      existing.company = company;
+      existing.country = country;
+      existing.agreedToTos = agreedToTos;
+
+      existing.emailVerifyCode = code;
+      existing.emailVerifyExpiry = expiry;
+
+      await existing.save();
+
+      try {
+        await sendVerificationEmail(
+          normalizedEmail,
+          firstName,
+          code
+        );
+      } catch (emailErr) {
+        console.error('Email send failed:', emailErr);
+      }
+
+      return res.json({
+        message: 'Verification code sent',
+        email: normalizedEmail,
+        step: 'verify'
+      });
+    }
+
+    const user = new User({
+      firstName,
+      lastName,
+      email: normalizedEmail,
+      password,
+      company,
+      country,
+      agreedToTos,
+      tosAgreedAt: new Date(),
+      emailVerifyCode: code,
+      emailVerifyExpiry: expiry
+    });
+
     await user.save();
-    await sendVerificationEmail(email, firstName, code);
-    res.status(201).json({ message: 'Verification code sent to your email', email, step: 'verify' });
+
+    try {
+      await sendVerificationEmail(
+        normalizedEmail,
+        firstName,
+        code
+      );
+    } catch (emailErr) {
+      console.error('Email send failed:', emailErr);
+    }
+
+    res.status(201).json({
+      message: 'Verification code sent to your email',
+      email: normalizedEmail,
+      step: 'verify'
+    });
+
   } catch (err) {
     console.error('Signup error:', err);
-    res.status(500).json({ error: 'Could not create account' });
+
+    res.status(500).json({
+      error: 'Could not create account'
+    });
   }
 });
 
