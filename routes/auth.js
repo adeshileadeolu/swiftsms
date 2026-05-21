@@ -94,6 +94,23 @@ router.post('/resend-code', async (req, res) => {
   }
 });
 
+// ── POST /api/auth/login ──────────────────────────────────────────────────────
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    if (!user || !(await user.comparePassword(password))) return res.status(401).json({ error: 'Invalid email or password' });
+    if (!user.isActive) return res.status(403).json({ error: 'Account suspended. Contact support.' });
+   
+    const token = signToken(user._id);
+    res.json({ token, user: user.toJSON() });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
 
 // ── POST /api/auth/forgot-password — send reset link ─────────────────────────
 router.post('/forgot-password', async (req, res) => {
