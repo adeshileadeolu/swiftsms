@@ -170,7 +170,7 @@ router.post('/resend-code', async (req, res) => {
     user.emailVerifyCode   = code;
     user.emailVerifyExpiry = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
-    await sendVerificationEmail(email, user.firstName, code);
+//    await sendVerificationEmail(email, user.firstName, code);
     res.json({ message: 'New verification code sent' });
   } catch (err) {
     res.status(500).json({ error: 'Could not resend code' });
