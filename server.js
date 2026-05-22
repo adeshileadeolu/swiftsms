@@ -1,10 +1,10 @@
 // ─── SwiftSMS Backend — server.js ────────────────────────────────────────────
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const express   = require('express');
+const cors      = require('cors');
+const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
+const mongoose  = require('mongoose');
 
 const authRoutes    = require('./routes/auth');
 const smsRoutes     = require('./routes/sms');
@@ -14,21 +14,27 @@ const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 
-// ── Trust Railway/cloud proxy — MUST be first line ───────────────────────────
+// ── Trust Railway proxy — MUST be first ──────────────────────────────────────
 app.set('trust proxy', 1);
 
-// ── CORS — wide open for now, locks down after confirmed working ──────────────
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+// ── CORS — open to all origins ────────────────────────────────────────────────
+// Security comes from JWT tokens, not origin restrictions.
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
+// ── Helmet (relax policies that conflict with open CORS) ──────────────────────
+app.use(helmet({
+  crossOriginResourcePolicy:  false,
+  crossOriginOpenerPolicy:    false,
+  crossOriginEmbedderPolicy:  false,
 }));
-app.options('*', cors());
 
-// ── Helmet — relax for debugging ─────────────────────────────────────────────
-app.use(helmet({ crossOriginResourcePolicy: false }));
-
-// ── Raw body for BTCPay webhook ───────────────────────────────────────────────
+// ── Raw body for BTCPay webhook (must be before JSON parser) ──────────────────
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
 
 // ── JSON body parser ──────────────────────────────────────────────────────────
@@ -40,15 +46,15 @@ app.use(rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests.' },
+  message: { error: 'Too many requests. Please slow down.' },
 }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many auth attempts.' },
+  message: { error: 'Too many auth attempts. Try again in 15 minutes.' },
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -58,27 +64,16 @@ app.use('/api/wallet',  walletRoutes);
 app.use('/api/clients', clientRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    time: new Date().toISOString(),
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    frontend_url: process.env.FRONTEND_URL || 'not set',
-    node_env: process.env.NODE_ENV || 'not set',
-  });
-});
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  time:   new Date().toISOString(),
+  db:     mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+}));
 
-// ── Debug route — shows what origin Railway sees ──────────────────────────────
-app.get('/debug', (req, res) => {
-  res.json({
-    origin:  req.headers.origin || 'no origin header',
-    host:    req.headers.host,
-    ip:      req.ip,
-    forward: req.headers['x-forwarded-for'] || 'none',
-  });
-});
+// ── 404 ───────────────────────────────────────────────────────────────────────
+app.use((req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` }));
 
-app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
+// ── Error handler ─────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(500).json({ error: err.message || 'Internal server error' });

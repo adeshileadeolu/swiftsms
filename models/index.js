@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   password:          { type: String, required: true, minlength: 8 },
   company:           { type: String, trim: true },
   country:           { type: String, trim: true },
-  role:              { type: String, enum: ['client', 'owner'], default: 'client' },
+  role:              { type: String, enum: ['client','owner'], default: 'client' },
   balance:           { type: Number, default: 0, min: 0 },
   totalSent:         { type: Number, default: 0 },
   totalCamps:        { type: Number, default: 0 },
@@ -18,10 +18,8 @@ const userSchema = new mongoose.Schema({
   isEmailVerified:   { type: Boolean, default: false },
   agreedToTos:       { type: Boolean, required: true },
   tosAgreedAt:       { type: Date },
-  // Email verification
   emailVerifyCode:   { type: String },
   emailVerifyExpiry: { type: Date },
-  // Password reset
   resetToken:        { type: String },
   resetTokenExpiry:  { type: Date },
 }, { timestamps: true });
@@ -31,14 +29,18 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
+
 userSchema.methods.comparePassword = async function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
+
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   delete obj.emailVerifyCode;
+  delete obj.emailVerifyExpiry;
   delete obj.resetToken;
+  delete obj.resetTokenExpiry;
   return obj;
 };
 
@@ -53,8 +55,17 @@ const campaignSchema = new mongoose.Schema({
   failedCount: { type: Number, default: 0 },
   cost:        { type: Number, default: 0 },
   status:      { type: String, enum: ['pending','sending','completed','failed'], default: 'pending' },
-  routeBreakdown: { twilio: { type: Number, default: 0 }, vonage: { type: Number, default: 0 } },
-  logs: [{ number: String, provider: String, status: String, error: String, timestamp: { type: Date, default: Date.now } }],
+  routeBreakdown: {
+    twilio: { type: Number, default: 0 },
+    vonage: { type: Number, default: 0 },
+  },
+  logs: [{
+    number:    String,
+    provider:  String,
+    status:    String,
+    error:     String,
+    timestamp: { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 // ── TRANSACTION ───────────────────────────────────────────────────────────────
