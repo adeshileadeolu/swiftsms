@@ -1,4 +1,4 @@
-// email.js
+// ─── services/email.js ────────────────────────────────────────────────────────
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => nodemailer.createTransport({
