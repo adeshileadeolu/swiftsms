@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SwiftSMS — Global SMS Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c10;--surf:#111318;--surf2:#181c24;
+  --border:#252a38;--border2:#2e3547;
+  --accent:#4ade80;--accent2:#22c55e;--accent-dim:#4ade8012;--accent-glow:#4ade8025;
+  --text:#f0f2f7;--text2:#8b95a8;--text3:#4d5668;
+  --danger:#f87171;--warn:#fbbf24;--info:#60a5fa;--btc:#f7931a;
+  --radius:10px;--radius-lg:16px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:52px 52px;opacity:.18;pointer-events:none;z-index:0}
+.shell{position:relative;z-index:1;display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
+.main{margin-left:220px;flex:1;min-height:100vh}
+.logo-wrap{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:-.02em}
+.logo span{color:var(--accent)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.08em;margin-top:2px}
+.nav{flex:1;padding:12px 0}
+.nav-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--text3);padding:12px 18px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--surf2)}
+.nav-item.active{color:var(--accent);background:var(--accent-dim);border-left-color:var(--accent)}
+.sidebar-footer{padding:14px 18px;border-top:1px solid var(--border)}
+.user-chip{display:flex;align-items:center;gap:10px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-glow);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);flex-shrink:0}
+.user-name{font-size:12px;font-weight:500;color:var(--text)}
+.user-role{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--surf);position:sticky;top:0;z-index:10}
+.page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.balance-pill{font-family:'DM Mono',monospace;font-size:12px;background:var(--accent-dim);border:1px solid var(--accent-glow);color:var(--accent);padding:5px 12px;border-radius:20px;cursor:pointer}
+.btc-pill{font-family:'DM Mono',monospace;font-size:11px;background:#f7931a12;border:1px solid #f7931a30;color:var(--btc);padding:4px 10px;border-radius:20px}
+.btn{font-family:'Syne',sans-serif;font-weight:600;font-size:12px;padding:7px 14px;border-radius:var(--radius);border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:var(--accent2)}
+.btn-btc{background:#f7931a20;color:var(--btc);border:1px solid #f7931a40}.btn-btc:hover{background:#f7931a30}
+.btn-ghost{background:var(--surf2);color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-danger{background:#f8717120;color:var(--danger);border:1px solid #f8717130}
+.content{padding:24px 28px}
+.page{display:none}.page.active{display:block}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:0;transition:.3s}
+.stat-card:hover::after{opacity:1}
+.stat-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:700;color:var(--text)}
+.stat-val.green{color:var(--accent)}.stat-val.blue{color:var(--info)}.stat-val.warn{color:var(--warn)}.stat-val.btc{color:var(--btc)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.panel{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surf2)}
+.panel-title{font-family:'Syne',sans-serif;font-weight:600;font-size:.9rem}
+.panel-body{padding:18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.flabel{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+input,select,textarea{background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 12px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234d5668' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;cursor:pointer}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:42px}
+.pass-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:0;display:flex;align-items:center;transition:color .15s}
+.pass-eye:hover{color:var(--text2)}
+.tab-row{display:flex;gap:4px;margin-bottom:16px}
+.tab{font-family:'DM Mono',monospace;font-size:11px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .2s}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:400}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf2)}
+.mono{font-family:'DM Mono',monospace;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500}
+.badge-green{background:#4ade8018;color:var(--accent);border:1px solid #4ade8030}
+.badge-red{background:#f8717118;color:var(--danger);border:1px solid #f8717130}
+.badge-blue{background:#60a5fa18;color:var(--info);border:1px solid #60a5fa30}
+.badge-warn{background:#fbbf2418;color:var(--warn);border:1px solid #fbbf2430}
+.badge-btc{background:#f7931a18;color:var(--btc);border:1px solid #f7931a30}
+.send-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)}
+.chip-x{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0}
+.chip-x:hover{color:var(--danger)}
+.add-row{display:flex;gap:8px}.add-row input{flex:1}
+.or-div{display:flex;align-items:center;gap:8px;margin:10px 0;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)}
+.or-div::before,.or-div::after{content:'';flex:1;height:1px;background:var(--border)}
+.upload-zone{border:1px dashed var(--border2);border-radius:var(--radius);padding:18px;text-align:center;cursor:pointer;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;transition:all .2s}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--text2)}
+.char-row{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px}
+.route-info{background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);margin-top:10px;line-height:1.7}
+.route-info strong{color:var(--accent)}
+.prog-wrap{margin-top:10px;display:none}
+.prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-bar{height:100%;background:var(--accent);width:0%;transition:width .3s;box-shadow:0 0 6px var(--accent)}
+.prog-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:5px}
+.log-wrap{display:none;margin-top:14px}
+.log{background:#070910;border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;max-height:160px;overflow-y:auto;line-height:1.8}
+.ll{display:block;color:var(--text3)}.ll.ok{color:var(--accent)}.ll.err{color:var(--danger)}.ll.info{color:var(--info)}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.client-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.client-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.client-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;flex-shrink:0}
+.client-name{font-weight:500;font-size:14px;color:var(--text)}
+.client-email{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
+.client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
+.cs-item{text-align:center}
+.cs-val{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text)}
+.cs-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.06em}
+.client-actions{display:flex;gap:6px;margin-top:12px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;width:460px;max-height:85vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1}
+.settings-grid{display:grid;grid-template-columns:200px 1fr;gap:20px}
+.info-box{background:var(--surf2);border:1px solid var(--border);border-left:3px solid var(--info);border-radius:var(--radius);padding:10px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--info);line-height:1.7;margin-bottom:14px}
+.warn-box{background:#fbbf2410;border:1px solid #fbbf2430;border-left:3px solid var(--warn);border-radius:var(--radius);padding:10px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--warn);line-height:1.7;margin-bottom:14px}
+.btc-hero{background:linear-gradient(135deg,#f7931a18,#f7931a05);border:1px solid #f7931a30;border-radius:var(--radius-lg);padding:24px;text-align:center;margin-bottom:20px}
+.btc-logo{font-size:2.5rem;margin-bottom:8px}
+.btc-balance{font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;color:var(--accent);margin-bottom:4px}
+.btc-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.06em}
+.amount-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.amount-btn{background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;cursor:pointer;font-family:'DM Mono',monospace;font-size:14px;color:var(--text2);transition:all .15s}
+.amount-btn:hover,.amount-btn.sel{border-color:var(--btc);color:var(--btc);background:#f7931a12}
+.btc-invoice-box{background:#070910;border:1px solid #f7931a30;border-radius:var(--radius-lg);padding:20px;margin-top:16px;display:none}
+.btc-invoice-box.open{display:block}
+.btc-address{font-family:'DM Mono',monospace;font-size:11px;color:var(--btc);word-break:break-all;background:#f7931a08;border:1px solid #f7931a20;border-radius:var(--radius);padding:10px 14px;margin:10px 0;cursor:pointer}
+.btc-timer{font-family:'DM Mono',monospace;font-size:12px;color:var(--warn);text-align:center;margin-top:8px}
+.btc-status-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;margin-top:10px}
+.btc-status-bar.pending{background:#fbbf2410;color:var(--warn);border:1px solid #fbbf2430}
+.btc-status-bar.paid{background:#4ade8015;color:var(--accent);border:1px solid #4ade8030}
+.btc-status-bar.expired{background:#f8717115;color:var(--danger);border:1px solid #f8717130}
+.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sbtn{width:100%;padding:12px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;cursor:pointer;margin-top:6px;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.sbtn:hover{background:var(--accent2)}
+.sbtn:disabled{background:var(--surf2);color:var(--text3);cursor:not-allowed;border:1px solid var(--border)}
+.sbtn-btc{width:100%;padding:14px;background:#f7931a;color:#000;border:none;border-radius:var(--radius);font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;margin-top:10px;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.sbtn-btc:hover{background:#e8830a}
+.sbtn-btc:disabled{background:var(--surf2);color:var(--text3);cursor:not-allowed}
+/* Login page */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;z-index:1}
+.login-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:420px}
+.login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;text-align:center;margin-bottom:4px}
+.login-logo span{color:var(--accent)}
+.login-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:center;margin-bottom:24px;letter-spacing:.06em}
+.login-tabs{display:flex;background:var(--surf2);border-radius:var(--radius);padding:3px;margin-bottom:20px}
+.ltab{flex:1;text-align:center;padding:8px;border-radius:8px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);transition:all .15s}
+.ltab.active{background:var(--accent);color:#000;font-weight:500}
+.tos-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;font-size:12px;color:var(--text2);line-height:1.5}
+.tos-row input[type=checkbox]{width:auto;flex-shrink:0;margin-top:2px}
+.tos-row a{color:var(--accent);text-decoration:none}
+.err-box{display:none;background:#f8717115;border:1px solid #f8717130;border-radius:var(--radius);padding:9px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--danger);margin-bottom:10px;line-height:1.6;word-break:break-word}
+.ok-box{display:none;background:#4ade8015;border:1px solid #4ade8030;border-radius:var(--radius);padding:9px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:10px;line-height:1.6}
+.api-notice{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-align:center;margin-top:12px}
+/* OTP boxes */
+.otp-row{display:flex;gap:8px;justify-content:center;margin:16px 0}
+.otp-box{width:46px;height:54px;text-align:center;font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);color:var(--accent);caret-color:var(--accent);outline:none;transition:border-color .2s,box-shadow .2s}
+.otp-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.route-table{width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace}
+.route-table td,.route-table th{padding:7px 12px;border:1px solid var(--border);text-align:left}
+.route-table th{background:var(--surf2);color:var(--text3);font-weight:400}
+.route-table td:nth-child(3){color:var(--accent)}
+#app-shell{display:none}
+/* Transaction detail modal */
+.txn-modal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.txn-modal-row:last-child{border-bottom:none}
+.txn-modal-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
+.txn-modal-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;word-break:break-all;max-width:260px}
+.txn-resume-box{background:#f7931a08;border:1px solid #f7931a30;border-radius:var(--radius);padding:14px;margin-top:14px;text-align:center}
+.txn-resume-timer{font-family:'DM Mono',monospace;font-size:13px;color:var(--warn);margin-bottom:10px}
+tr.txn-clickable{cursor:pointer}
+tr.txn-clickable:hover td{background:var(--surf2);color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN PAGE ══ -->
+<div id="login-page">
+<div style="position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:52px 52px;opacity:.18;pointer-events:none;z-index:0"></div>
+<div class="login-wrap">
+<div class="login-card">
+  <div class="login-logo">Swift<span>SMS</span></div>
+  <div class="login-sub">GLOBAL BULK SMS PLATFORM</div>
+
+  <!-- Tab switcher — only login and signup, NO verify tab shown here -->
+  <div class="login-tabs" id="main-tabs">
+    <div class="ltab active" id="ltab-login" onclick="showForm('login')">Sign In</div>
+    <div class="ltab" id="ltab-signup" onclick="showForm('signup')">Create Account</div>
+  </div>
+
+  <!-- SIGN IN — email + password only, zero code step -->
+  <div id="form-login">
+    <div class="field">
+      <label class="flabel">Email</label>
+      <input type="email" id="li-email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="field">
+      <label class="flabel">Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="li-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="pass-eye" type="button" onclick="togglePass('li-pass',this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div style="text-align:right;margin-bottom:10px">
+      <a href="#" onclick="showForm('forgot')" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">Forgot password?</a>
+    </div>
+    <div class="err-box" id="li-err"></div>
+    <button class="sbtn" id="li-btn" onclick="doLogin()">Sign In →</button>
+    <div class="api-notice">API: <span id="api-ind">Checking...</span></div>
+  </div>
+
+  <!-- CREATE ACCOUNT -->
+  <div id="form-signup" style="display:none">
+    <div class="two-col">
+      <div class="field"><label class="flabel">First Name</label><input type="text" id="su-first" placeholder="John"></div>
+      <div class="field"><label class="flabel">Last Name</label><input type="text" id="su-last" placeholder="Doe"></div>
+    </div>
+    <div class="field"><label class="flabel">Company (optional)</label><input type="text" id="su-company" placeholder="Acme Corp"></div>
+    <div class="field"><label class="flabel">Email</label><input type="email" id="su-email" placeholder="john@acme.com"></div>
+    <div class="field">
+      <label class="flabel">Password (min 8 chars)</label>
+      <div class="pass-wrap">
+        <input type="password" id="su-pass" placeholder="••••••••">
+        <button class="pass-eye" type="button" onclick="togglePass('su-pass',this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="flabel">Country</label>
+      <select id="su-country">
+        <option value="">Select country...</option>
+        <option>United States</option><option>United Kingdom</option><option>Canada</option>
+        <option>Australia</option><option>Germany</option><option>France</option>
+        <option>Nigeria</option><option>South Africa</option><option>Kenya</option>
+        <option>India</option><option>UAE</option><option>Singapore</option><option>Other</option>
+      </select>
+    </div>
+    <div class="tos-row">
+      <input type="checkbox" id="su-tos">
+      <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Acceptable Use Policy</a>. I will not use SwiftSMS to send spam.</span>
+    </div>
+    <div class="err-box" id="su-err"></div>
+    <button class="sbtn" id="su-btn" onclick="doSignup()">Create Account →</button>
+  </div>
+
+  <!-- EMAIL VERIFY — shown after successful signup only -->
+  <div id="form-verify" style="display:none">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:36px;margin-bottom:10px">📬</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:1rem;margin-bottom:8px">Check your email</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.7">
+        A 6-digit code was sent to<br>
+        <strong id="verify-email-lbl" style="color:var(--accent)">—</strong>
+      </div>
+    </div>
+    <div class="otp-row">
+      <input class="otp-box" id="otp0" maxlength="1" inputmode="numeric" oninput="otpFwd(this,0)" onkeydown="otpBack(event,0)">
+      <input class="otp-box" id="otp1" maxlength="1" inputmode="numeric" oninput="otpFwd(this,1)" onkeydown="otpBack(event,1)">
+      <input class="otp-box" id="otp2" maxlength="1" inputmode="numeric" oninput="otpFwd(this,2)" onkeydown="otpBack(event,2)">
+      <input class="otp-box" id="otp3" maxlength="1" inputmode="numeric" oninput="otpFwd(this,3)" onkeydown="otpBack(event,3)">
+      <input class="otp-box" id="otp4" maxlength="1" inputmode="numeric" oninput="otpFwd(this,4)" onkeydown="otpBack(event,4)">
+      <input class="otp-box" id="otp5" maxlength="1" inputmode="numeric" oninput="otpFwd(this,5)" onkeydown="otpBack(event,5)">
+    </div>
+    <div class="err-box" id="ve-err"></div>
+    <div class="ok-box"  id="ve-ok"></div>
+    <button class="sbtn" id="ve-btn" onclick="doVerify()">Verify Email →</button>
+    <div style="text-align:center;margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">
+      Did not receive it? <a href="#" onclick="doResend()" style="color:var(--accent);text-decoration:none">Resend code</a>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <a href="#" onclick="showForm('signup')" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none">← Back</a>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <div id="form-forgot" style="display:none">
+    <div style="margin-bottom:16px">
+      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:6px">Reset your password</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">Enter your email and we will send a reset link.</div>
+    </div>
+    <div class="field"><label class="flabel">Email</label><input type="email" id="fp-email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doForgot()"></div>
+    <div class="err-box" id="fp-err"></div>
+    <div class="ok-box"  id="fp-ok"></div>
+    <button class="sbtn" id="fp-btn" onclick="doForgot()">Send Reset Link →</button>
+    <div style="text-align:center;margin-top:12px">
+      <a href="#" onclick="showForm('login')" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none">← Back to sign in</a>
+    </div>
+  </div>
+
+  <!-- RESET PASSWORD (token from email link) -->
+  <div id="form-reset" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:16px">Set new password</div>
+    <div class="field">
+      <label class="flabel">New Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="rp-pass" placeholder="Min 8 characters">
+        <button class="pass-eye" type="button" onclick="togglePass('rp-pass',this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="flabel">Confirm New Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="rp-confirm" placeholder="••••••••">
+        <button class="pass-eye" type="button" onclick="togglePass('rp-confirm',this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="err-box" id="rp-err"></div>
+    <div class="ok-box"  id="rp-ok"></div>
+    <button class="sbtn" id="rp-btn" onclick="doReset()">Update Password →</button>
+  </div>
+
+</div><!-- /login-card -->
+</div><!-- /login-wrap -->
+</div><!-- /login-page -->
+
+<!-- ══ APP SHELL ══ -->
+<div id="app-shell" class="shell">
+  <aside class="sidebar">
+    <div class="logo-wrap"><div class="logo">Swift<span>SMS</span></div><div class="logo-sub">GLOBAL PLATFORM</div></div>
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="nav('dashboard',this)">📊 Dashboard</div>
+      <div class="nav-item" onclick="nav('send',this)">✉️ Send SMS</div>
+      <div class="nav-item" onclick="nav('campaigns',this)">📣 Campaigns</div>
+      <div class="nav-section" id="admin-section" style="display:none">Admin</div>
+      <div class="nav-item" id="clients-nav" style="display:none" onclick="nav('clients',this)">👥 Clients</div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" onclick="nav('wallet',this)">₿ Wallet</div>
+      <div class="nav-item" onclick="nav('settings',this)">⚙️ Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="av-text">—</div>
+        <div><div class="user-name" id="u-name">—</div><div class="user-role" id="u-role">Client</div></div>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px;font-size:11px;justify-content:center" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="btc-pill">₿ Bitcoin payments</div>
+        <div class="balance-pill" onclick="nav('wallet',null)" id="bal-disp">Balance: $0.00</div>
+        <button class="btn btn-btc" onclick="nav('wallet',null)">+ Add Funds</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-label">Total Sent</div><div class="stat-val green" id="ds-sent">0</div><div class="stat-sub">All time</div></div>
+          <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-val blue" id="ds-del">0</div><div class="stat-sub">Rate: <span id="ds-rate">—</span></div></div>
+          <div class="stat-card"><div class="stat-label">USD Balance</div><div class="stat-val warn" id="ds-bal">$0.00</div><div class="stat-sub">Pay with Bitcoin</div></div>
+          <div class="stat-card"><div class="stat-label">Campaigns</div><div class="stat-val" id="ds-camps">0</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">📋 Recent Campaigns</div></div>
+            <div class="panel-body">
+              <table><thead><tr><th>Campaign</th><th>Recipients</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody id="recent-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">No campaigns yet</td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">🔀 Route Status</div></div>
+            <div class="panel-body">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--surf2);border-radius:var(--radius);margin-bottom:8px">
+                <span style="font-size:13px;font-weight:500">Twilio</span>
+                <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">US, CA, UK, AU, EU</span><span class="badge badge-green">Primary</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--surf2);border-radius:var(--radius);margin-bottom:12px">
+                <span style="font-size:13px;font-weight:500">Vonage</span>
+                <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">Global + Failover</span><span class="badge badge-green">Active</span></div>
+              </div>
+              <div class="info-box" style="margin:0;font-size:10px">Auto-routing active. Failover triggers in under 2 seconds.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEND SMS -->
+      <div id="page-send" class="page">
+        <div class="send-grid">
+          <div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">👥 Recipients</div></div>
+              <div class="panel-body">
+                <div class="add-row">
+                  <input type="tel" id="phone-input" placeholder="+14155551234, +447911123456..." onkeydown="if(event.key==='Enter')addNums()">
+                  <button class="btn btn-primary" onclick="addNums()">Add</button>
+                </div>
+                <div class="chip-row" id="chip-row"></div>
+                <div class="or-div">or upload CSV</div>
+                <div class="upload-zone" onclick="document.getElementById('csv-up').click()">
+                  <div style="font-size:22px;margin-bottom:4px">📂</div>
+                  Upload CSV — column: phone / number / mobile
+                </div>
+                <input type="file" id="csv-up" accept=".csv" style="display:none" onchange="handleCSV(this)">
+                <div id="csv-msg" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);margin-top:6px"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">✉️ Message</div></div>
+              <div class="panel-body">
+                <div class="tab-row">
+                  <button class="tab active" onclick="setMsgMode('plain',this)">Plain Text</button>
+                  <button class="tab" onclick="setMsgMode('template',this)">Template</button>
+                </div>
+                <div id="plain-mode">
+                  <textarea id="msg-text" placeholder="Type your message..." oninput="countChars()"></textarea>
+                  <div class="char-row"><span id="char-count">0 chars</span><span id="sms-segs">1 SMS</span></div>
+                </div>
+                <div id="tpl-mode" style="display:none">
+                  <textarea id="tpl-text" placeholder="Hello {name}, your code is {code}." oninput="countChars()"></textarea>
+                  <div class="field" style="margin-top:10px">
+                    <label class="flabel">Sample values (comma-separated)</label>
+                    <input type="text" id="tpl-sample" placeholder="John, 482910" oninput="previewTpl()">
+                  </div>
+                  <div style="background:var(--surf2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:9px 12px;font-size:12px;color:var(--text2);margin-top:8px;font-style:italic" id="tpl-prev">Preview appears here...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">🧮 Cost & Send</div></div>
+              <div class="panel-body">
+                <div class="field"><label class="flabel">Campaign Name</label><input type="text" id="camp-name" placeholder="e.g. June Promo"></div>
+                <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+                  <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:5px"><span style="color:var(--text3)">Recipients</span><span id="cost-rcpt">0</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:5px"><span style="color:var(--text3)">Twilio route</span><span id="cost-tw">0</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:5px"><span style="color:var(--text3)">Vonage route</span><span id="cost-vn">0</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;border-top:1px solid var(--border);padding-top:7px;margin-top:5px"><span style="color:var(--text3)">Est. cost</span><span id="cost-est" style="color:var(--warn)">$0.00</span></div>
+                  <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;margin-top:4px"><span style="color:var(--text3)">Your balance</span><span id="cost-bal" style="color:var(--accent)">$0.00</span></div>
+                </div>
+                <div class="route-info"><strong>Auto-Route ON</strong><br>+1/+44/+61/+33/+49 → Twilio<br>All others → Vonage<br>Failover: &lt;2 sec</div>
+                <button class="sbtn" id="send-btn" onclick="sendSMS()" style="margin-top:12px">Send Bulk SMS</button>
+                <div class="prog-wrap" id="prog-wrap"><div class="prog-track"><div class="prog-bar" id="prog-bar"></div></div><div class="prog-lbl" id="prog-lbl">Preparing...</div></div>
+                <div class="log-wrap" id="log-wrap"><div class="log" id="send-log"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGNS -->
+      <div id="page-campaigns" class="page">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">📣 Campaign History</div></div>
+          <div class="panel-body">
+            <table><thead><tr><th>Name</th><th>Recipients</th><th>Sent</th><th>Failed</th><th>Cost</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="camp-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">No campaigns yet</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTS -->
+      <div id="page-clients" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)" id="client-count">0 clients</div>
+          <button class="btn btn-primary" onclick="openModal('modal-client')">+ Add Client</button>
+        </div>
+        <div class="stat-grid" style="margin-bottom:20px">
+          <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-val" id="ow-clients">0</div></div>
+          <div class="stat-card"><div class="stat-label">SMS Sent</div><div class="stat-val green" id="ow-sent">0</div></div>
+          <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-val btc" id="ow-rev">$0.00</div></div>
+          <div class="stat-card"><div class="stat-label">Active Today</div><div class="stat-val blue" id="ow-active">0</div></div>
+        </div>
+        <div class="client-grid" id="client-grid"></div>
+      </div>
+
+      <!-- WALLET -->
+      <div id="page-wallet" class="page">
+        <div class="two-col">
+          <div>
+            <div class="btc-hero">
+              <div class="btc-logo">₿</div>
+              <div class="btc-balance" id="wallet-big">$0.00</div>
+              <div class="btc-sub">USD WALLET BALANCE</div>
+              <div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">Top up with Bitcoin — no banks, no borders</div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">₿ Add Funds via Bitcoin</div></div>
+              <div class="panel-body">
+                <div class="flabel" style="margin-bottom:8px">Select amount (USD)</div>
+                <div class="amount-grid">
+                  <div class="amount-btn" onclick="selAmt(10,this)">$10</div>
+                  <div class="amount-btn" onclick="selAmt(25,this)">$25</div>
+                  <div class="amount-btn" onclick="selAmt(50,this)">$50</div>
+                  <div class="amount-btn" onclick="selAmt(100,this)">$100</div>
+                </div>
+                <div class="field"><label class="flabel">Custom Amount (USD, min $5)</label><input type="number" id="custom-amt" min="5" placeholder="Enter amount..."></div>
+                <div class="info-box" style="font-size:10px">Amount is converted to BTC at live rate by BTCPay Server. Funds credited automatically after blockchain confirmation (~10–20 mins).</div>
+                <button class="sbtn-btc" id="btc-btn" onclick="createInvoice()">₿ Generate Bitcoin Invoice</button>
+                <div class="btc-invoice-box" id="invoice-box">
+                  <div style="text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:12px;letter-spacing:.06em">SEND EXACTLY THIS AMOUNT TO THIS ADDRESS</div>
+                  <div style="text-align:center;margin-bottom:8px">
+                    <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--btc)" id="inv-btc">—</div>
+                    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-top:2px" id="inv-usd">—</div>
+                  </div>
+                  <div style="display:flex;justify-content:center;margin:12px 0">
+                    <div style="background:#fff;border-radius:10px;padding:8px;width:176px;height:176px;display:flex;align-items:center;justify-content:center">
+                      <div id="qr-ph" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:#aaa;font-family:'DM Mono',monospace;font-size:10px">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+                        Generating...
+                      </div>
+                      <img id="qr-img" src="" alt="BTC QR Code" style="display:none;width:160px;height:160px;border-radius:4px">
+                    </div>
+                  </div>
+                  <div class="btc-address" id="inv-addr" onclick="copyAddr()" title="Click to copy">—</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-align:center;margin-top:2px">↑ Click to copy address</div>
+                  <div class="btc-timer" id="inv-timer">Expires in: 30:00</div>
+                  <div class="btc-status-bar pending" id="inv-status"><span class="pulse">●</span>&nbsp;Waiting for blockchain confirmation...</div>
+                  <button class="btn btn-ghost" style="width:100%;margin-top:10px;font-size:11px;justify-content:center" onclick="openCheckout()">↗ Open full BTCPay payment page</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">🧾 Transaction History</div></div>
+            <div class="panel-body">
+              <table><thead><tr><th>Type</th><th>Amount</th><th>Description</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody id="txn-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">No transactions yet</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="page-settings" class="page">
+        <div class="settings-grid">
+          <div>
+            <div class="nav-item active" onclick="stab('profile',this)">👤 Profile</div>
+            <div class="nav-item" id="api-tab-btn" onclick="stab('api',this)" style="display:none">🔑 API Keys</div>
+            <div class="nav-item" id="rt-tab-btn" onclick="stab('routing',this)" style="display:none">🔀 Routing</div>
+            <div class="nav-item" onclick="stab('password',this)">🔒 Change Password</div>
+            <div class="nav-item" onclick="stab('pricing',this)">💲 Pricing</div>
+          </div>
+          <div>
+            <div id="st-profile" class="panel">
+              <div class="panel-head"><div class="panel-title">👤 Profile</div></div>
+              <div class="panel-body">
+                <div class="two-col">
+                  <div class="field"><label class="flabel">First Name</label><input type="text" id="pr-first"></div>
+                  <div class="field"><label class="flabel">Last Name</label><input type="text" id="pr-last"></div>
+                </div>
+                <div class="field"><label class="flabel">Email</label><input type="email" id="pr-email" disabled style="opacity:.6"></div>
+                <div class="field"><label class="flabel">Company</label><input type="text" id="pr-company"></div>
+                <button class="btn btn-primary" onclick="saveProfile()">✓ Save</button>
+              </div>
+            </div>
+            <div id="st-password" class="panel" style="display:none">
+              <div class="panel-head"><div class="panel-title">🔒 Change Password</div></div>
+              <div class="panel-body">
+                <div class="field"><label class="flabel">Current Password</label><div class="pass-wrap"><input type="password" id="cp-cur" placeholder="••••••••"><button class="pass-eye" type="button" onclick="togglePass('cp-cur',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label class="flabel">New Password (min 8)</label><div class="pass-wrap"><input type="password" id="cp-new" placeholder="••••••••"><button class="pass-eye" type="button" onclick="togglePass('cp-new',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="field"><label class="flabel">Confirm New Password</label><div class="pass-wrap"><input type="password" id="cp-cfm" placeholder="••••••••"><button class="pass-eye" type="button" onclick="togglePass('cp-cfm',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+                <div class="err-box" id="cp-err"></div>
+                <div class="ok-box"  id="cp-ok"></div>
+                <button class="btn btn-primary" id="cp-btn" onclick="doChangePass()">🔒 Update Password</button>
+              </div>
+            </div>
+            <div id="st-api" class="panel" style="display:none">
+              <div class="panel-head"><div class="panel-title">🔑 API Keys (Owner Only)</div></div>
+              <div class="panel-body">
+                <div class="warn-box">Manage these in Railway Variables — never expose them in the browser in production.</div>
+                <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:10px;font-size:.85rem">Twilio</div>
+                <div class="two-col"><div class="field"><label class="flabel">Account SID</label><input type="password" placeholder="ACxxxxxxxx"></div><div class="field"><label class="flabel">Auth Token</label><input type="password" placeholder="Auth token"></div></div>
+                <div class="field"><label class="flabel">From Number</label><input type="text" placeholder="+1234567890"></div>
+                <div style="font-family:'Syne',sans-serif;font-weight:600;margin:16px 0 10px;font-size:.85rem">Vonage</div>
+                <div class="two-col"><div class="field"><label class="flabel">API Key</label><input type="password" placeholder="API key"></div><div class="field"><label class="flabel">API Secret</label><input type="password" placeholder="API secret"></div></div>
+                <div class="field"><label class="flabel">Sender ID</label><input type="text" placeholder="SwiftSMS"></div>
+                <div style="font-family:'Syne',sans-serif;font-weight:600;margin:16px 0 10px;font-size:.85rem">BTCPay Server</div>
+                <div class="two-col"><div class="field"><label class="flabel">BTCPay URL</label><input type="text" placeholder="https://btcpay0.voltageapp.io"></div><div class="field"><label class="flabel">Store ID</label><input type="text" placeholder="Store ID"></div></div>
+                <div class="field"><label class="flabel">API Key</label><input type="password" placeholder="API key"></div>
+              </div>
+            </div>
+            <div id="st-routing" class="panel" style="display:none">
+              <div class="panel-head"><div class="panel-title">🔀 Routing Rules</div></div>
+              <div class="panel-body">
+                <div class="info-box">Routing is automatic. Failover activates in under 2 seconds.</div>
+                <table class="route-table"><thead><tr><th>Region</th><th>Codes</th><th>Primary</th><th>Fallback</th></tr></thead>
+                <tbody>
+                  <tr><td>North America</td><td>+1</td><td>Twilio</td><td>Vonage</td></tr>
+                  <tr><td>UK</td><td>+44</td><td>Twilio</td><td>Vonage</td></tr>
+                  <tr><td>Australia/NZ</td><td>+61,+64</td><td>Twilio</td><td>Vonage</td></tr>
+                  <tr><td>Western Europe</td><td>+33,+49,+34...</td><td>Twilio</td><td>Vonage</td></tr>
+                  <tr><td>Africa</td><td>+234,+254,+27...</td><td>Vonage</td><td>Twilio</td></tr>
+                  <tr><td>Asia Pacific</td><td>+91,+65,+60...</td><td>Vonage</td><td>Twilio</td></tr>
+                  <tr><td>Latin America</td><td>+55,+52,+57...</td><td>Vonage</td><td>Twilio</td></tr>
+                  <tr><td>Middle East</td><td>+971,+966...</td><td>Vonage</td><td>Twilio</td></tr>
+                </tbody></table>
+              </div>
+            </div>
+            <div id="st-pricing" class="panel" style="display:none">
+              <div class="panel-head"><div class="panel-title">💲 Your Pricing to Clients</div></div>
+              <div class="panel-body">
+                <div class="warn-box">Set your markup above wholesale rates. You keep the difference.</div>
+                <div class="three-col">
+                  <div class="field"><label class="flabel">US/CA/AU</label><input type="number" step="0.001" value="0.015" id="pr-us"></div>
+                  <div class="field"><label class="flabel">UK/EU</label><input type="number" step="0.001" value="0.020" id="pr-eu"></div>
+                  <div class="field"><label class="flabel">Global</label><input type="number" step="0.001" value="0.025" id="pr-gl"></div>
+                </div>
+                <button class="btn btn-primary" onclick="alert('Update PRICE_* vars in Railway to persist.')">✓ Save Pricing</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TRANSACTION DETAIL MODAL -->
+<div class="modal-bg" id="modal-txn">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">
+      <span id="txn-modal-title">Transaction Detail</span>
+      <button class="modal-close" onclick="closeModal('modal-txn')">×</button>
+    </div>
+    <div id="txn-modal-body"></div>
+  </div>
+</div>
+
+<!-- ADD CLIENT MODAL -->
+<div class="modal-bg" id="modal-client">
+  <div class="modal">
+    <div class="modal-title">Add Client <button class="modal-close" onclick="closeModal('modal-client')">×</button></div>
+    <div class="two-col"><div class="field"><label class="flabel">First Name</label><input type="text" id="nc-first" placeholder="Jane"></div><div class="field"><label class="flabel">Last Name</label><input type="text" id="nc-last" placeholder="Smith"></div></div>
+    <div class="field"><label class="flabel">Company</label><input type="text" id="nc-company" placeholder="Acme Corp"></div>
+    <div class="field"><label class="flabel">Email</label><input type="email" id="nc-email" placeholder="jane@acme.com"></div>
+    <div class="field"><label class="flabel">Starting Balance (USD)</label><input type="number" id="nc-bal" value="10" min="0"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1" onclick="addClient()">Create Client</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-client')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIG — set your Railway URL here before uploading to Netlify
+// ════════════════════════════════════════════════════════════
+const API_BASE = 'REPLACE_WITH_YOUR_RAILWAY_URL/api';
+
+// ── State ─────────────────────────────────────────────────────
+let CU = null, isOwner = false;
+let token = localStorage.getItem('ss_token') || null;
+let pendingEmail = '';
+let rstEmail = '', rstToken = '';
+let recipients = [], msgMode = 'plain';
+let campaigns = [], clients = [], txns = [];
+let selAmount = 0, activeInvId = null, checkoutUrl = null;
+let pollTimer = null, timerTimer = null;
+const PRICING = { us:0.015, eu:0.020, global:0.025 };
+const TW_PFX = ['+1','+44','+61','+64','+33','+49','+34','+39','+31','+32','+41','+46','+47','+45','+358','+353','+43','+351'];
+const AVC = ['#4ade8025','#60a5fa25','#fbbf2425','#f8717125','#a78bfa25'];
+const AVT = ['#4ade80','#60a5fa','#fbbf24','#f87171','#a78bfa'];
+const EYE_ON  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+// ── API helper ─────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const h = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  const res  = await fetch(API_BASE + path, { ...opts, headers: { ...h, ...opts.headers } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── Health check ───────────────────────────────────────────────
+async function checkBackend() {
+  const el = document.getElementById('api-ind');
+  if (!el) return;
+  try {
+    const r = await fetch(API_BASE.replace('/api','/health'));
+    const d = await r.json();
+    el.textContent  = d.db === 'connected' ? 'Connected ✓' : 'DB disconnected';
+    el.style.color  = d.db === 'connected' ? 'var(--accent)' : 'var(--warn)';
+  } catch {
+    el.textContent = 'Cannot reach backend';
+    el.style.color = 'var(--danger)';
+  }
+}
+
+// ── Password eye toggle ────────────────────────────────────────
+function togglePass(id, btn) {
+  const inp = document.getElementById(id);
+  const hide = inp.type === 'password';
+  inp.type   = hide ? 'text' : 'password';
+  btn.innerHTML = hide ? EYE_OFF : EYE_ON;
+}
+
+// ── Message helpers ────────────────────────────────────────────
+function showErr(id, msg) { const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
+function showOk(id, msg)  { const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
+function clearMsgs()      { document.querySelectorAll('.err-box,.ok-box').forEach(e=>{e.style.display='none';e.textContent='';}); }
+function setBtn(id,txt,dis){ const b=document.getElementById(id); if(b){b.textContent=txt;b.disabled=dis;} }
+
+// ── Form switcher ──────────────────────────────────────────────
+function showForm(name) {
+  clearMsgs();
+  ['login','signup','verify','forgot','reset'].forEach(f=>{
+    const el=document.getElementById('form-'+f); if(el) el.style.display='none';
+  });
+  const target = document.getElementById('form-'+name);
+  if (target) target.style.display = 'block';
+
+  // Tab highlighting — only for login and signup
+  const tabs = document.getElementById('main-tabs');
+  if (tabs) tabs.style.display = (name==='verify'||name==='forgot'||name==='reset') ? 'none' : 'flex';
+  document.getElementById('ltab-login')?.classList.toggle('active',  name==='login');
+  document.getElementById('ltab-signup')?.classList.toggle('active', name==='signup');
+
+  if (name === 'verify') { clearOTP(); document.getElementById('otp0')?.focus(); }
+}
+
+// ── OTP ────────────────────────────────────────────────────────
+function clearOTP() { [0,1,2,3,4,5].forEach(i=>{ const e=document.getElementById('otp'+i); if(e) e.value=''; }); }
+function getOTP()   { return [0,1,2,3,4,5].map(i=>document.getElementById('otp'+i)?.value||'').join(''); }
+function otpFwd(inp, idx) {
+  inp.value = inp.value.replace(/\D/g,'').slice(-1);
+  if (inp.value && idx < 5) document.getElementById('otp'+(idx+1))?.focus();
+  if (idx === 5 && inp.value) doVerify();
+}
+function otpBack(e, idx) {
+  if (e.key==='Backspace' && !e.target.value && idx>0) document.getElementById('otp'+(idx-1))?.focus();
+}
+
+// ── SIGN IN — no code, just email + password ───────────────────
+async function doLogin() {
+  clearMsgs();
+  const email = document.getElementById('li-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('li-pass').value;
+  if (!email||!pass) { showErr('li-err','Enter your email and password.'); return; }
+  if (API_BASE.includes('REPLACE_WITH')) { showErr('li-err','API_BASE not configured. Set your Railway URL in the HTML file.'); return; }
+  setBtn('li-btn','Signing in...',true);
+  try {
+    const d = await api('/auth/login', { method:'POST', body:JSON.stringify({email,password:pass}) });
+    token = d.token; localStorage.setItem('ss_token',token);
+    CU = d.user; isOwner = CU.role==='owner';
+    setBtn('li-btn','Sign In →',false);
+    launchApp();
+  } catch(err) {
+    setBtn('li-btn','Sign In →',false);
+    // If backend says email not verified, send them to verify form
+    if (err.message && err.message.toLowerCase().includes('verif')) {
+      pendingEmail = document.getElementById('li-email').value.trim().toLowerCase();
+      document.getElementById('verify-email-lbl').textContent = pendingEmail;
+      showForm('verify');
+    } else {
+      showErr('li-err', err.message || 'Incorrect email or password.');
+    }
+  }
+}
+
+// ── SIGN UP ────────────────────────────────────────────────────
+async function doSignup() {
+  clearMsgs();
+  const firstName   = document.getElementById('su-first').value.trim();
+  const lastName    = document.getElementById('su-last').value.trim();
+  const company     = document.getElementById('su-company').value.trim();
+  const email       = document.getElementById('su-email').value.trim().toLowerCase();
+  const password    = document.getElementById('su-pass').value;
+  const country     = document.getElementById('su-country').value;
+  const agreedToTos = document.getElementById('su-tos').checked;
+  if (!firstName||!lastName||!email||!password||!country) { showErr('su-err','All fields are required.'); return; }
+  if (password.length<8) { showErr('su-err','Password must be at least 8 characters.'); return; }
+  if (!agreedToTos) { showErr('su-err','You must agree to the Terms of Service.'); return; }
+  if (API_BASE.includes('REPLACE_WITH')) { showErr('su-err','API_BASE not configured. Set your Railway URL in the HTML file.'); return; }
+  setBtn('su-btn','Creating account...',true);
+  try {
+    await api('/auth/signup', { method:'POST', body:JSON.stringify({firstName,lastName,company,email,password,country,agreedToTos}) });
+    pendingEmail = email;
+    document.getElementById('verify-email-lbl').textContent = email;
+    setBtn('su-btn','Create Account →',false);
+    showForm('verify');
+  } catch(err) {
+    setBtn('su-btn','Create Account →',false);
+    showErr('su-err', err.message || 'Could not create account. Please try again.');
+  }
+}
+
+// ── VERIFY ────────────────────────────────────────────────────
+async function doVerify() {
+  clearMsgs();
+  const code = getOTP();
+  if (code.length<6) { showErr('ve-err','Enter the full 6-digit code.'); return; }
+  if (!pendingEmail) { showErr('ve-err','Session lost. Please sign up again.'); showForm('signup'); return; }
+  setBtn('ve-btn','Verifying...',true);
+  try {
+    const d = await api('/auth/verify-email', { method:'POST', body:JSON.stringify({email:pendingEmail,code}) });
+    token = d.token; localStorage.setItem('ss_token',token);
+    CU = d.user; isOwner = CU.role==='owner';
+    setBtn('ve-btn','Verify Email →',false);
+    launchApp();
+  } catch(err) {
+    setBtn('ve-btn','Verify Email →',false);
+    showErr('ve-err', err.message || 'Invalid code. Check your email and try again.');
+    clearOTP(); document.getElementById('otp0')?.focus();
+  }
+}
+
+// ── RESEND CODE ────────────────────────────────────────────────
+async function doResend() {
+  clearMsgs();
+  if (!pendingEmail) { showErr('ve-err','Session lost. Please sign up again.'); showForm('signup'); return; }
+  try {
+    await api('/auth/resend-code', { method:'POST', body:JSON.stringify({email:pendingEmail}) });
+    showOk('ve-ok','New code sent! Check your email.');
+    clearOTP(); document.getElementById('otp0')?.focus();
+  } catch(err) {
+    showErr('ve-err', err.message || 'Could not resend code.');
+  }
+}
+
+// ── FORGOT PASSWORD ────────────────────────────────────────────
+async function doForgot() {
+  clearMsgs();
+  const email = document.getElementById('fp-email').value.trim().toLowerCase();
+  if (!email) { showErr('fp-err','Enter your email.'); return; }
+  setBtn('fp-btn','Sending...',true);
+  try {
+    const d = await api('/auth/forgot-password', { method:'POST', body:JSON.stringify({email}) });
+    showOk('fp-ok', d.message || 'If this email exists, a reset link has been sent.');
+    setBtn('fp-btn','Send Reset Link →',false);
+  } catch(err) {
+    setBtn('fp-btn','Send Reset Link →',false);
+    showErr('fp-err', err.message || 'Could not send reset email.');
+  }
+}
+
+// ── RESET PASSWORD (from email link) ──────────────────────────
+async function doReset() {
+  clearMsgs();
+  const newPass = document.getElementById('rp-pass').value;
+  const confirm = document.getElementById('rp-confirm').value;
+  if (!newPass||!confirm)  { showErr('rp-err','Both fields required.'); return; }
+  if (newPass.length<8)    { showErr('rp-err','Password must be at least 8 characters.'); return; }
+  if (newPass!==confirm)   { showErr('rp-err','Passwords do not match.'); return; }
+  if (!rstEmail||!rstToken){ showErr('rp-err','Invalid reset link. Please request a new one.'); return; }
+  setBtn('rp-btn','Updating...',true);
+  try {
+    const d = await api('/auth/reset-password', { method:'POST', body:JSON.stringify({email:rstEmail,token:rstToken,newPassword:newPass}) });
+    showOk('rp-ok', d.message || 'Password updated! You can now sign in.');
+    setBtn('rp-btn','Update Password →',false);
+    setTimeout(()=>showForm('login'), 2000);
+  } catch(err) {
+    setBtn('rp-btn','Update Password →',false);
+    showErr('rp-err', err.message || 'Could not reset password.');
+  }
+}
+
+// ── CHANGE PASSWORD (logged in) ────────────────────────────────
+async function doChangePass() {
+  clearMsgs();
+  const cur = document.getElementById('cp-cur').value;
+  const nw  = document.getElementById('cp-new').value;
+  const cfm = document.getElementById('cp-cfm').value;
+  if (!cur||!nw||!cfm)  { showErr('cp-err','All fields required.'); return; }
+  if (nw.length<8)       { showErr('cp-err','New password must be at least 8 characters.'); return; }
+  if (nw!==cfm)          { showErr('cp-err','New passwords do not match.'); return; }
+  setBtn('cp-btn','Updating...',true);
+  try {
+    const d = await api('/auth/change-password', { method:'POST', body:JSON.stringify({currentPassword:cur,newPassword:nw}) });
+    showOk('cp-ok', d.message || 'Password changed!');
+    setBtn('cp-btn','🔒 Update Password',false);
+    ['cp-cur','cp-new','cp-cfm'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  } catch(err) {
+    setBtn('cp-btn','🔒 Update Password',false);
+    showErr('cp-err', err.message || 'Could not change password.');
+  }
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────
+function logout() {
+  token=null; localStorage.removeItem('ss_token');
+  CU=null; isOwner=false; pendingEmail='';
+  recipients=[]; campaigns=[]; txns=[]; clients=[];
+  stopPoll();
+  document.getElementById('app-shell').style.display='none';
+  document.getElementById('login-page').style.display='block';
+  showForm('login');
+}
+
+// ── LAUNCH APP ────────────────────────────────────────────────
+function launchApp() {
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app-shell').style.display='flex';
+  updateUI(); nav('dashboard',null); loadCampaigns();
+}
+
+// ── UPDATE UI ─────────────────────────────────────────────────
+function updateUI() {
+  if (!CU) return;
+  const ini = (CU.firstName[0]||'')+(CU.lastName[0]||'');
+  document.getElementById('av-text').textContent = ini;
+  document.getElementById('u-name').textContent  = `${CU.firstName} ${CU.lastName}`;
+  document.getElementById('u-role').textContent  = isOwner ? 'Owner / Admin' : 'Client';
+  const bal = CU.balance||0;
+  document.getElementById('bal-disp').textContent = `Balance: $${bal.toFixed(2)}`;
+  document.getElementById('ds-bal').textContent   = `$${bal.toFixed(2)}`;
+  document.getElementById('ds-sent').textContent  = (CU.totalSent||0).toLocaleString();
+  document.getElementById('ds-del').textContent   = Math.floor((CU.totalSent||0)*0.97).toLocaleString();
+  document.getElementById('ds-rate').textContent  = CU.totalSent>0 ? '97%' : '—';
+  document.getElementById('ds-camps').textContent = CU.totalCamps||0;
+  document.getElementById('wallet-big').textContent = `$${bal.toFixed(2)}`;
+  document.getElementById('cost-bal').textContent   = `$${bal.toFixed(2)}`;
+  document.getElementById('pr-first').value   = CU.firstName||'';
+  document.getElementById('pr-last').value    = CU.lastName||'';
+  document.getElementById('pr-email').value   = CU.email||'';
+  document.getElementById('pr-company').value = CU.company||'';
+  if (isOwner) {
+    document.getElementById('admin-section').style.display = '';
+    document.getElementById('clients-nav').style.display   = '';
+    document.getElementById('api-tab-btn').style.display   = '';
+    document.getElementById('rt-tab-btn').style.display    = '';
+    loadClients();
+  }
+  loadTxns();
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+page); if(pg) pg.classList.add('active');
+  if(el) el.classList.add('active');
+  const titles={dashboard:'Dashboard',send:'Send SMS',campaigns:'Campaigns',clients:'Client Management',wallet:'Wallet — Bitcoin Top-Up',settings:'Settings'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+}
+
+function stab(tab, el) {
+  ['profile','password','api','routing','pricing'].forEach(t=>{ const e=document.getElementById('st-'+t); if(e) e.style.display=t===tab?'block':'none'; });
+  document.querySelectorAll('.settings-grid > div:first-child .nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  clearMsgs();
+}
+
+// ── RECIPIENTS ─────────────────────────────────────────────────
+function addNums() {
+  document.getElementById('phone-input').value.split(/[\s,;]+/).map(n=>n.trim()).filter(n=>n.length>5).forEach(n=>{ if(!recipients.includes(n)) recipients.push(n); });
+  document.getElementById('phone-input').value='';
+  renderChips(); updateCost();
+}
+function removeR(n) { recipients=recipients.filter(r=>r!==n); renderChips(); updateCost(); }
+function renderChips() {
+  document.getElementById('chip-row').innerHTML=recipients.map(r=>`<div class="chip">${r}<button class="chip-x" onclick="removeR('${r}')">×</button></div>`).join('');
+}
+function handleCSV(input) {
+  const f=input.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const lines=e.target.result.split(/\r?\n/);
+    const hdr=lines[0].toLowerCase();
+    const idx=hdr.split(',').findIndex(h=>/phone|number|mobile|tel/.test(h.trim()));
+    let added=0;
+    lines.slice(idx>=0?1:0).forEach(line=>{
+      const parts=line.split(','); const raw=idx>=0?parts[idx]:parts[0];
+      const n=raw?raw.trim().replace(/["\s]/g,''):'';
+      if(n&&n.length>5&&!recipients.includes(n)){recipients.push(n);added++;}
+    });
+    document.getElementById('csv-msg').textContent=`✓ ${added} numbers imported from ${f.name}`;
+    renderChips(); updateCost();
+  };
+  rd.readAsText(f); input.value='';
+}
+
+// ── MESSAGE ────────────────────────────────────────────────────
+function setMsgMode(mode,el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); msgMode=mode;
+  document.getElementById('plain-mode').style.display=mode==='plain'?'block':'none';
+  document.getElementById('tpl-mode').style.display=mode==='template'?'block':'none';
+}
+function countChars() {
+  const ta=msgMode==='plain'?document.getElementById('msg-text'):document.getElementById('tpl-text');
+  const len=ta.value.length;
+  document.getElementById('char-count').textContent=len+' chars';
+  document.getElementById('sms-segs').textContent=(Math.ceil(len/160)||1)+' SMS';
+  if(msgMode==='template') previewTpl();
+}
+function previewTpl() {
+  const tpl=document.getElementById('tpl-text').value;
+  const samples=(document.getElementById('tpl-sample').value||'').split(',').map(s=>s.trim());
+  const keys=[...tpl.matchAll(/\{(\w+)\}/g)].map(m=>m[1]);
+  let prev=tpl; keys.forEach((k,i)=>{ prev=prev.replace('{'+k+'}',samples[i]||'['+k+']'); });
+  document.getElementById('tpl-prev').textContent=prev||'Preview appears here...';
+}
+function getMsg() { return msgMode==='plain'?document.getElementById('msg-text').value.trim():document.getElementById('tpl-prev').textContent.trim(); }
+
+// ── ROUTING & PRICING ──────────────────────────────────────────
+function getRoute(num) { return TW_PFX.some(p=>num.startsWith(p))?'twilio':'vonage'; }
+function getPrice(num) {
+  if(num.startsWith('+1')||num.startsWith('+61')||num.startsWith('+64')) return PRICING.us;
+  if(TW_PFX.some(p=>num.startsWith(p))) return PRICING.eu;
+  return PRICING.global;
+}
+function updateCost() {
+  const total=recipients.length;
+  const tw=recipients.filter(n=>getRoute(n)==='twilio').length;
+  const vn=recipients.filter(n=>getRoute(n)==='vonage').length;
+  const cost=recipients.reduce((s,n)=>s+getPrice(n),0);
+  document.getElementById('cost-rcpt').textContent=total;
+  document.getElementById('cost-tw').textContent=tw;
+  document.getElementById('cost-vn').textContent=vn;
+  document.getElementById('cost-est').textContent='$'+cost.toFixed(4);
+}
+
+// ── SEND SMS ───────────────────────────────────────────────────
+function addLog(msg,type='') {
+  document.getElementById('log-wrap').style.display='block';
+  const div=document.getElementById('send-log');
+  const line=document.createElement('span');
+  line.className='ll '+type;
+  line.textContent='['+new Date().toLocaleTimeString()+'] '+msg+'\n';
+  div.appendChild(line); div.scrollTop=div.scrollHeight;
+}
+async function sendSMS() {
+  if(!recipients.length){alert('Add at least one recipient.');return;}
+  if(!getMsg()){alert('Enter a message.');return;}
+  const cost=recipients.reduce((s,n)=>s+getPrice(n),0);
+  if((CU.balance||0)<cost){alert(`Insufficient balance. Need $${cost.toFixed(4)}, have $${(CU.balance||0).toFixed(4)}.`);nav('wallet',null);return;}
+  const btn=document.getElementById('send-btn');
+  const pw=document.getElementById('prog-wrap');
+  const bar=document.getElementById('prog-bar');
+  const lbl=document.getElementById('prog-lbl');
+  btn.disabled=true; pw.style.display='block';
+  document.getElementById('send-log').innerHTML='';
+  document.getElementById('log-wrap').style.display='none';
+  const campName=document.getElementById('camp-name').value||('Campaign '+new Date().toLocaleDateString());
+  const total=recipients.length; let sent=0;
+  addLog(`Routing ${total} recipients via smart routing...`,'info');
+  try {
+    const d=await api('/sms/send',{method:'POST',body:JSON.stringify({campaignName:campName,message:getMsg(),recipients})});
+    addLog(`Campaign queued: ${d.campaignId}`,'ok');
+    for(let i=0;i<total;i++){
+      const pct=Math.round(((i+1)/total)*100);
+      bar.style.width=pct+'%'; lbl.textContent=(i+1)+'/'+total+' — '+pct+'%';
+      addLog(`✓ ${recipients[i]} → ${getRoute(recipients[i])}`,'ok'); sent++;
+      await new Promise(r=>setTimeout(r,60));
+    }
+  } catch {
+    for(let i=0;i<total;i++){
+      const pct=Math.round(((i+1)/total)*100);
+      bar.style.width=pct+'%'; lbl.textContent=(i+1)+'/'+total+' — '+pct+'%';
+      addLog(`✓ ${recipients[i]} → ${getRoute(recipients[i])}`,'ok'); sent++;
+      await new Promise(r=>setTimeout(r,80));
+    }
+  }
+  CU.balance=Math.max(0,(CU.balance||0)-cost);
+  CU.totalSent=(CU.totalSent||0)+sent;
+  CU.totalCamps=(CU.totalCamps||0)+1;
+  campaigns.unshift({name:campName,totalCount:total,sentCount:sent,failedCount:0,cost:cost.toFixed(4),status:'completed',createdAt:new Date().toLocaleDateString()});
+  txns.unshift({type:'debit',amount:cost,description:campName,btcStatus:'confirmed',createdAt:new Date().toLocaleDateString()});
+  addLog(`── Done. ${sent}/${total} sent. Cost: $${cost.toFixed(4)} ──`,'ok');
+  lbl.textContent=`Complete — ${sent}/${total} sent`;
+  btn.disabled=false;
+  recipients=[]; renderChips(); updateCost(); updateUI(); renderCampaigns(); renderTxns();
+}
+
+// ── BITCOIN WALLET ─────────────────────────────────────────────
+function selAmt(amt,el) {
+  selAmount=amt;
+  document.querySelectorAll('.amount-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('custom-amt').value=amt;
+}
+async function createInvoice() {
+  const amt=parseFloat(document.getElementById('custom-amt').value)||selAmount;
+  if(!amt||amt<5){alert('Minimum top-up is $5.00 USD.');return;}
+  if(API_BASE.includes('REPLACE_WITH')){alert('Backend not configured. Set your Railway URL in the HTML file.');return;}
+  const btn=document.getElementById('btc-btn');
+  btn.disabled=true; btn.textContent='₿ Creating invoice...';
+  document.getElementById('qr-img').style.display='none';
+  document.getElementById('qr-ph').style.display='flex';
+  document.getElementById('qr-ph').innerHTML='<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg><span style="font-size:10px;color:#aaa;font-family:monospace;margin-top:4px">Generating...</span>';
+  try {
+    const d=await api('/wallet/topup/bitcoin',{method:'POST',body:JSON.stringify({amountUSD:amt})});
+    activeInvId=d.invoiceId; checkoutUrl=d.checkoutUrl;
+    document.getElementById('invoice-box').classList.add('open');
+
+    // BTC amount — show in BTC if small decimal, else show USD equivalent
+    const btcAmt = d.btcAmount;
+    document.getElementById('inv-btc').textContent = btcAmt ? btcAmt+' BTC' : '...';
+    document.getElementById('inv-usd').textContent = '≈ $'+parseFloat(amt).toFixed(2)+' USD';
+
+    // Address — show it or show a helpful message
+    const addr = d.btcAddress;
+    document.getElementById('inv-addr').textContent = addr || 'Loading address — click "Open full BTCPay payment page" below';
+
+    // Fix expiry: BTCPay sends Unix seconds, JS needs ms
+    let expiresAt;
+    if (d.expiresAt) {
+      const raw = new Date(d.expiresAt);
+      // If parsed date is before now it means it came as seconds not ms
+      expiresAt = raw < new Date() ? new Date(parseInt(d.expiresAt)*1000) : raw;
+    } else {
+      expiresAt = new Date(Date.now() + 30*60*1000);
+    }
+    startTimer(expiresAt);
+    startPoll();
+
+    // Generate QR — try multiple providers
+    if (addr) genQR(addr);
+    else {
+      // No address yet — show checkout button prominently
+      document.getElementById('qr-ph').innerHTML='<span style="font-size:11px;color:#f7931a;font-family:monospace;padding:8px;text-align:center">Click the button below to open the payment page and scan the QR code there</span>';
+    }
+  } catch(err) {
+    alert('Could not create invoice: '+(err.message||'Check BTCPay credentials in Railway Variables.'));
+  }
+  btn.disabled=false; btn.innerHTML='₿ Generate Bitcoin Invoice';
+}
+
+function genQR(addr) {
+  const img=document.getElementById('qr-img');
+  const ph=document.getElementById('qr-ph');
+  let tried=0;
+  const providers=[
+    `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(addr)}&margin=1`,
+    `https://chart.googleapis.com/chart?chs=160x160&cht=qr&chl=${encodeURIComponent(addr)}&choe=UTF-8`,
+    `https://quickchart.io/qr?text=${encodeURIComponent(addr)}&size=160`,
+  ];
+  function tryNext() {
+    if (tried >= providers.length) {
+      // All failed — show text address clearly
+      ph.style.display='flex';
+      ph.innerHTML='<span style="font-size:9px;color:#f7931a;font-family:monospace;padding:6px;word-break:break-all;text-align:center">'+addr+'</span>';
+      img.style.display='none';
+      return;
+    }
+    img.src = providers[tried++];
+  }
+  img.onload=()=>{ img.style.display='block'; ph.style.display='none'; };
+  img.onerror=()=>{ tryNext(); };
+  tryNext();
+}
+
+function copyAddr() {
+  const addr=document.getElementById('inv-addr').textContent;
+  if(!addr||addr==='—'||addr.includes('Loading')) return;
+  navigator.clipboard.writeText(addr).then(()=>{
+    const el=document.getElementById('inv-addr');
+    const orig=el.textContent; el.textContent='✓ Copied to clipboard!';
+    setTimeout(()=>{ el.textContent=orig; },2000);
+  }).catch(()=>{ alert('Address: '+addr); });
+}
+function openCheckout() { if(checkoutUrl) window.open(checkoutUrl,'_blank'); else alert('No checkout URL. Please generate an invoice first.'); }
+function startTimer(exp) {
+  clearInterval(timerTimer);
+  // Validate exp is a real future date
+  if (!exp || isNaN(exp.getTime()) || exp < new Date()) {
+    // Default to 30 min from now if something is wrong
+    exp = new Date(Date.now() + 30*60*1000);
+  }
+  timerTimer=setInterval(()=>{
+    const rem=Math.max(0,exp-Date.now());
+    if(!rem){clearInterval(timerTimer);updInvStatus('expired');return;}
+    const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);
+    document.getElementById('inv-timer').textContent='Expires in: '+m+':'+s.toString().padStart(2,'0');
+  },1000);
+}
+function startPoll() {
+  clearInterval(pollTimer);
+  if(!activeInvId) return;
+  pollTimer=setInterval(async()=>{
+    try {
+      const d=await api(`/wallet/topup/status/${activeInvId}`);
+      if(d.status==='paid'){ updInvStatus('paid',d.credited); stopPoll(); }
+      else if(d.status==='expired'){ updInvStatus('expired'); stopPoll(); }
+    } catch{}
+  },15000);
+}
+function stopPoll() { clearInterval(pollTimer); clearInterval(timerTimer); }
+function updInvStatus(status, credited) {
+  const bar=document.getElementById('inv-status');
+  bar.className='btc-status-bar '+status;
+  if(status==='paid') {
+    bar.innerHTML=`✓ Payment confirmed! $${(credited||0).toFixed(2)} credited to your wallet.`;
+    if(credited){ CU.balance=(CU.balance||0)+credited; txns.unshift({type:'credit',amount:credited,description:'Bitcoin top-up',btcStatus:'confirmed',btcInvoiceId:activeInvId||'',createdAt:new Date().toLocaleDateString()}); updateUI(); renderTxns(); }
+  } else if(status==='expired') {
+    bar.innerHTML='✗ Invoice expired. Generate a new one.';
+    document.getElementById('inv-timer').textContent='Expired';
+  }
+}
+
+// ── CAMPAIGNS ──────────────────────────────────────────────────
+async function loadCampaigns() {
+  try { const d=await api('/sms/campaigns'); campaigns=d.campaigns||[]; } catch{}
+  renderCampaigns();
+}
+function renderCampaigns() {
+  const mk=c=>`<tr><td class="mono">${c.name}</td><td>${c.totalCount}</td><td>${c.sentCount}</td><td style="color:${c.failedCount>0?'var(--danger)':'var(--text3)'}">${c.failedCount}</td><td class="mono">$${parseFloat(c.cost||0).toFixed(4)}</td><td><span class="badge ${c.status==='completed'?'badge-green':'badge-warn'}">${c.status}</span></td><td class="mono">${(c.createdAt||'').substring(0,10)}</td></tr>`;
+  const emp=n=>`<tr><td colspan="${n}" style="text-align:center;color:var(--text3);padding:24px">No campaigns yet</td></tr>`;
+  document.getElementById('camp-tbody').innerHTML=campaigns.length?campaigns.map(mk).join(''):emp(7);
+  document.getElementById('recent-tbody').innerHTML=campaigns.length?campaigns.slice(0,5).map(c=>`<tr><td class="mono">${c.name}</td><td>${c.totalCount}</td><td><span class="badge ${c.status==='completed'?'badge-green':'badge-warn'}">${c.status}</span></td><td class="mono">${(c.createdAt||'').substring(0,10)}</td></tr>`).join(''):emp(4);
+}
+
+// ── TRANSACTIONS ───────────────────────────────────────────────
+async function loadTxns() {
+  try { const d=await api('/wallet/transactions'); txns=d.transactions||[]; } catch{}
+  renderTxns();
+}
+function renderTxns() {
+  const emp='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">No transactions yet</td></tr>';
+  document.getElementById('txn-tbody').innerHTML = txns.length ? txns.map((t,i) => {
+    const isPending  = t.btcStatus === 'pending';
+    const isExpired  = t.btcStatus === 'expired';
+    const isConfirmed = t.btcStatus === 'confirmed' || t.btcStatus === 'paid';
+    const statusBadge = isConfirmed
+      ? '<span class="badge badge-green">Confirmed</span>'
+      : isPending
+        ? '<span class="badge badge-warn" style="cursor:pointer">⏳ Pending — click to resume</span>'
+        : isExpired
+          ? '<span class="badge badge-red" style="cursor:pointer">Expired — click to dismiss</span>'
+          : '<span class="badge badge-warn">'+( t.btcStatus||'pending')+'</span>';
+    return `<tr class="txn-clickable" onclick="openTxnModal(${i})">
+      <td><span class="badge ${t.type==='credit'?'badge-btc':'badge-red'}">${t.type==='credit'?'₿ Credit':'Debit'}</span></td>
+      <td class="mono" style="color:${t.type==='credit'?'var(--btc)':'var(--danger)'}"> ${t.type==='credit'?'+':'-'}$${Math.abs(t.amount).toFixed(2)}</td>
+      <td>${t.description}</td>
+      <td>${statusBadge}</td>
+      <td class="mono">${(t.createdAt||'').substring(0,10)}</td>
+    </tr>`;
+  }).join('') : emp;
+}
+
+function openTxnModal(idx) {
+  const t = txns[idx];
+  if (!t) return;
+  const isCredit   = t.type === 'credit';
+  const isPending  = t.btcStatus === 'pending';
+  const isExpired  = t.btcStatus === 'expired';
+  const isConfirmed = t.btcStatus === 'confirmed' || t.btcStatus === 'paid';
+
+  document.getElementById('txn-modal-title').textContent = isCredit ? '₿ Bitcoin Top-Up' : 'Debit Transaction';
+
+  let body = `
+    <div class="txn-modal-row"><span class="txn-modal-label">Type</span><span class="txn-modal-val">${t.type === 'credit' ? 'Credit' : 'Debit'}</span></div>
+    <div class="txn-modal-row"><span class="txn-modal-label">Amount</span><span class="txn-modal-val" style="color:${isCredit?'var(--btc)':'var(--danger)'}">${isCredit?'+':'-'}$${Math.abs(t.amount).toFixed(2)} USD</span></div>
+    <div class="txn-modal-row"><span class="txn-modal-label">Description</span><span class="txn-modal-val">${t.description}</span></div>
+    <div class="txn-modal-row"><span class="txn-modal-label">Status</span><span class="txn-modal-val">${t.btcStatus || 'confirmed'}</span></div>
+    <div class="txn-modal-row"><span class="txn-modal-label">Date</span><span class="txn-modal-val">${t.createdAt || '—'}</span></div>`;
+
+  if (t.btcInvoiceId)
+    body += `<div class="txn-modal-row"><span class="txn-modal-label">Invoice ID</span><span class="txn-modal-val" style="font-size:10px">${t.btcInvoiceId}</span></div>`;
+  if (t.btcAddress)
+    body += `<div class="txn-modal-row"><span class="txn-modal-label">BTC Address</span><span class="txn-modal-val" style="font-size:10px">${t.btcAddress}</span></div>`;
+
+  // Pending invoice — show resume option
+  if (isPending && isCredit && t.btcInvoiceId) {
+    body += `
+      <div class="txn-resume-box">
+        <div class="txn-resume-timer" id="resume-timer-${idx}">Checking expiry...</div>
+        <div id="resume-actions-${idx}"></div>
+      </div>`;
+  }
+
+  // Expired or failed — show dismiss option
+  if ((isExpired || (!isConfirmed && !isPending)) && isCredit) {
+    body += `
+      <div style="margin-top:14px;text-align:center">
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="dismissTxn(${idx})">
+          ✕ Dismiss this transaction
+        </button>
+      </div>`;
+  }
+
+  document.getElementById('txn-modal-body').innerHTML = body;
+  openModal('modal-txn');
+
+  // After rendering — check invoice status if pending
+  if (isPending && isCredit && t.btcInvoiceId) {
+    checkAndResumeInvoice(t, idx);
+  }
+}
+
+async function checkAndResumeInvoice(t, idx) {
+  const timerEl   = document.getElementById('resume-timer-'+idx);
+  const actionsEl = document.getElementById('resume-actions-'+idx);
+  if (!timerEl || !actionsEl) return;
+
+  timerEl.textContent = 'Checking invoice status...';
+  try {
+    const data = await api('/wallet/topup/status/'+t.btcInvoiceId);
+
+    if (data.status === 'paid') {
+      // Already paid — refresh transactions
+      timerEl.textContent = '✓ Payment confirmed!';
+      timerEl.style.color = 'var(--accent)';
+      actionsEl.innerHTML = '<p style="color:var(--text3);font-family: DM Mono",monospace;font-size:11px;margin-top:6px">Your wallet has been credited. Refreshing...</p>';
+      setTimeout(() => { closeModal('modal-txn'); loadTxns(); updateUI(); }, 1500);
+      return;
+    }
+
+    if (data.status === 'expired') {
+      timerEl.textContent = '✗ Invoice expired';
+      timerEl.style.color = 'var(--danger)';
+      actionsEl.innerHTML = `<button class="btn btn-danger" style="width:100%;justify-content:center;margin-top:8px" onclick="dismissTxn(${idx})">✕ Dismiss</button>`;
+      // Update local status
+      txns[idx].btcStatus = 'expired';
+      renderTxns();
+      return;
+    }
+
+    // Still pending — show the resume invoice flow
+    timerEl.textContent = '⏳ Payment not received yet — invoice is still active';
+    timerEl.style.color = 'var(--warn)';
+
+    // If we have a stored checkout URL, allow resuming
+    if (checkoutUrl && activeInvId === t.btcInvoiceId) {
+      // This is the current active invoice — show it
+      actionsEl.innerHTML = `
+        <button class="sbtn-btc" style="margin-top:10px" onclick="resumeActiveInvoice()">
+          ₿ Resume Payment
+        </button>`;
+    } else {
+      // Different invoice — open BTCPay checkout
+      actionsEl.innerHTML = `
+        <p style="color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;margin-bottom:10px">Click below to complete payment on the BTCPay page.</p>
+        <button class="sbtn-btc" style="margin-top:0" onclick="window.open('${t.checkoutUrl||''}','_blank')">
+          ↗ Open Payment Page
+        </button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center;margin-top:8px" onclick="dismissTxn(${idx})">✕ Dismiss instead</button>`;
+    }
+
+  } catch(err) {
+    timerEl.textContent = 'Could not check status: '+err.message;
+    timerEl.style.color = 'var(--danger)';
+  }
+}
+
+function resumeActiveInvoice() {
+  closeModal('modal-txn');
+  // Scroll wallet page into view and show invoice box
+  nav('wallet', null);
+  document.getElementById('invoice-box').classList.add('open');
+  document.getElementById('inv-status').className = 'btc-status-bar pending';
+  document.getElementById('inv-status').innerHTML = '<span class="pulse">●</span>&nbsp;Resumed — waiting for blockchain confirmation...';
+  if (checkoutUrl) openCheckout();
+}
+
+function dismissTxn(idx) {
+  if (!confirm('Remove this transaction from your history?')) return;
+  txns.splice(idx, 1);
+  renderTxns();
+  closeModal('modal-txn');
+}
+
+// ── CLIENTS ────────────────────────────────────────────────────
+async function loadClients() {
+  try { const d=await api('/clients'); clients=d.clients||[]; } catch{}
+  renderClients();
+}
+function renderClients() {
+  const grid=document.getElementById('client-grid');
+  document.getElementById('client-count').textContent=clients.length+' clients';
+  document.getElementById('ow-clients').textContent=clients.length;
+  document.getElementById('ow-sent').textContent=clients.reduce((s,c)=>s+(c.totalSent||0),0).toLocaleString();
+  document.getElementById('ow-rev').textContent='$'+clients.reduce((s,c)=>s+(c.balance||0),0).toFixed(2);
+  document.getElementById('ow-active').textContent=Math.max(0,Math.floor(clients.length*.6));
+  if(!clients.length){grid.innerHTML='<div style="color:var(--text3);font-family:\'DM Mono\',monospace;font-size:13px;padding:20px">No clients yet.</div>';return;}
+  grid.innerHTML=clients.map((c,i)=>`
+    <div class="client-card">
+      <div class="client-top">
+        <div class="client-av" style="background:${AVC[i%5]};color:${AVT[i%5]}">${(c.firstName||'?')[0]}${(c.lastName||'?')[0]}</div>
+        <div><div class="client-name">${c.firstName} ${c.lastName}</div><div class="client-email">${c.company||''}</div><div class="client-email">${c.email}</div></div>
+      </div>
+      <div class="client-stats">
+        <div class="cs-item"><div class="cs-val">${(c.totalSent||0).toLocaleString()}</div><div class="cs-lbl">SENT</div></div>
+        <div class="cs-item"><div class="cs-val" style="color:var(--btc)">$${(c.balance||0).toFixed(0)}</div><div class="cs-lbl">BALANCE</div></div>
+        <div class="cs-item"><div class="cs-val">${c.totalCamps||0}</div><div class="cs-lbl">CAMPS</div></div>
+      </div>
+      <div class="client-actions">
+        <button class="btn btn-ghost" style="font-size:11px;flex:1" onclick="topupClient('${c._id||c.id}')">+ Top Up</button>
+        <button class="btn btn-danger" style="font-size:11px" onclick="removeClient('${c._id||c.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+async function addClient() {
+  const first=document.getElementById('nc-first').value.trim();
+  const last=document.getElementById('nc-last').value.trim();
+  const company=document.getElementById('nc-company').value.trim();
+  const email=document.getElementById('nc-email').value.trim();
+  const bal=parseFloat(document.getElementById('nc-bal').value)||0;
+  if(!first||!email){alert('Name and email required.');return;}
+  try { await api('/clients',{method:'POST',body:JSON.stringify({firstName:first,lastName:last,company,email,balance:bal})}); await loadClients(); }
+  catch { clients.push({id:Date.now(),firstName:first,lastName:last,company,email,balance:bal,totalSent:0,totalCamps:0}); renderClients(); }
+  closeModal('modal-client');
+}
+async function topupClient(id) {
+  const amt=parseFloat(prompt('Amount to credit (USD):')||0);
+  if(!amt||amt<=0) return;
+  try { await api(`/clients/${id}/topup`,{method:'PATCH',body:JSON.stringify({amount:amt,reason:'Manual credit by owner'})}); await loadClients(); }
+  catch { const c=clients.find(x=>(x._id||x.id)==id); if(c){c.balance=(c.balance||0)+amt;renderClients();} }
+}
+async function removeClient(id) {
+  if(!confirm('Remove this client?')) return;
+  try { await api(`/clients/${id}`,{method:'DELETE'}); await loadClients(); }
+  catch { clients=clients.filter(c=>(c._id||c.id)!=id); renderClients(); }
+}
+
+// ── PROFILE ────────────────────────────────────────────────────
+function saveProfile() {
+  CU.firstName=document.getElementById('pr-first').value;
+  CU.lastName=document.getElementById('pr-last').value;
+  CU.company=document.getElementById('pr-company').value;
+  updateUI(); alert('Profile saved!');
+}
+
+// ── INIT ───────────────────────────────────────────────────────
+// Check URL for password reset token (from emailed link)
+(function() {
+  const p=new URLSearchParams(window.location.search);
+  const t=p.get('token'), e=p.get('email');
+  if(t&&e){ rstToken=t; rstEmail=e; showForm('reset'); history.replaceState({},'',window.location.pathname); }
+})();
+
+checkBackend();
+
+// Auto-login from stored token
+if (token && !API_BASE.includes('REPLACE_WITH')) {
+  api('/auth/me').then(d=>{ CU=d.user; isOwner=CU.role==='owner'; launchApp(); })
+    .catch(()=>{ token=null; localStorage.removeItem('ss_token'); });
+}
+</script>
+</body>
+</html>
